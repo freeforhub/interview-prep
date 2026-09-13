@@ -1,0 +1,292 @@
+<!--
+  Interview Prep Generator — HTML Output Templates
+  供 Agent 生成内容时参考的模板结构
+  实际输出时替换 {{占位符}} 为真实内容
+
+  两种模板：
+  - Template A: 复习资料模式 (Q&A 卡片式)
+  - Template B: 面试记录模式 (时间线 + 质量评级)
+-->
+
+<!-- ====================================================== -->
+<!-- Template A: 复习资料模式                                -->
+<!-- ====================================================== -->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{公司名}} {{岗位名}} — 笔试面试复习资料</title>
+<style>
+  :root {
+    --primary: #0064FF;
+    --accent: #FF3355;
+    --bg: #f5f7fa;
+    --card-bg: #ffffff;
+    --text: #1a1a2e;
+    --text-muted: #6c757d;
+    --border: #e2e8f0;
+    --easy: #28a745;
+    --medium: #ffc107;
+    --hard: #dc3545;
+    --tag-bg: #EBF0FF;
+    --tag-text: #0064FF;
+    --code-bg: #f1f5f9;
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.7; font-size: 15px;
+  }
+  .header {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white; padding: 48px 24px 40px; text-align: center;
+  }
+  .header h1 { font-size: 28px; margin-bottom: 8px; }
+  .header .jd-info span { background: rgba(255,255,255,0.15); padding: 4px 14px; border-radius: 20px; font-size: 13px; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+  .section { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow); padding: 28px 32px; margin: 24px 0; }
+  .section-title { font-size: 22px; color: var(--primary); border-left: 5px solid var(--accent); padding-left: 14px; }
+  .qa-card { border: 1px solid var(--border); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+  .qa-header { display: flex; align-items: flex-start; gap: 12px; padding: 16px 20px; cursor: pointer; user-select: none; }
+  .qa-number { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; background: var(--tag-bg); color: var(--primary); border-radius: 8px; font-weight: 700; font-size: 13px; }
+  .qa-title { flex: 1; font-weight: 600; font-size: 15px; }
+  .qa-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 11px; padding: 2px 10px; border-radius: 12px; font-weight: 600; }
+  .tag.easy { background: #d4edda; color: #155724; }
+  .tag.medium { background: #fff3cd; color: #856404; }
+  .tag.hard { background: #f8d7da; color: #721c24; }
+  .tag.topic { background: var(--tag-bg); color: var(--tag-text); }
+  .qa-toggle { color: var(--text-muted); font-size: 18px; transition: transform 0.3s; }
+  .qa-card.open .qa-toggle { transform: rotate(90deg); }
+  .qa-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+  .qa-card.open .qa-body { max-height: 10000px; }
+  .qa-content { padding: 0 20px 20px; border-top: 1px solid var(--border); padding-top: 16px; }
+  .qa-content code { background: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #c0392b; }
+  .qa-content pre { background: #1e293b; color: #e2e8f0; padding: 14px 18px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
+  .answer-label { display: inline-block; background: var(--accent); color: white; padding: 2px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; margin-bottom: 10px; }
+  .key-points { background: #fffde6; border-left: 4px solid #ffc107; padding: 10px 16px; border-radius: 6px; margin: 10px 0; }
+  .resume-link { background: #e8f4fd; border-left: 4px solid var(--accent); padding: 10px 16px; border-radius: 6px; margin: 10px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+  table th, table td { border: 1px solid var(--border); padding: 8px 12px; }
+  table th { background: var(--tag-bg); color: var(--primary); }
+  @media print { .qa-body { max-height: none !important; } .qa-toggle { display: none; } * { -webkit-print-color-adjust: exact !important; } }
+</style>
+</head>
+<body>
+
+<!-- 页头 -->
+<div class="header">
+  <h1>{{公司名}} {{岗位名}} — 笔试面试复习资料</h1>
+  <div class="jd-info">
+    <span>公司：{{公司名}}</span>
+    <span>岗位：{{岗位名}}</span>
+    <span>类型：{{校招/社招}}</span>
+    <span>地点：{{城市}}</span>
+  </div>
+</div>
+
+<!-- Q&A 卡片 -->
+<div class="qa-card">
+  <div class="qa-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="qa-number">Q{{题号}}</span>
+    <span class="qa-title">{{问题标题}}</span>
+    <div class="qa-tags">
+      <span class="tag {{难度}}">{{难度}}</span>
+      <span class="tag topic">{{主题}}</span>
+    </div>
+    <span class="qa-toggle">▶</span>
+  </div>
+  <div class="qa-body"><div class="qa-content">
+    <span class="answer-label">标准答案</span>
+    <!-- 答案内容 -->
+    <div class="key-points"><strong>关键得分点：</strong>① ... ② ... ③ ...</div>
+    <div class="resume-link"><strong>简历关联：</strong>如何关联简历经历</div>
+  </div></div>
+</div>
+
+</body>
+</html>
+
+
+<!-- ====================================================== -->
+<!-- Template B: 面试记录模式                                -->
+<!-- ====================================================== -->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{公司名}} {{岗位名}} 面试记录 {{日期}}</title>
+<style>
+  :root {
+    --primary: #0064FF;
+    --accent: #FF3355;
+    --bg: #f5f7fa;
+    --card-bg: #ffffff;
+    --text: #1a1a2e;
+    --border: #e2e8f0;
+    --tag-bg: #EBF0FF;
+    --tag-text: #0064FF;
+    --code-bg: #f1f5f9;
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+    --quality-good: #28a745;
+    --quality-ok: #ffc107;
+    --quality-bad: #dc3545;
+    --quality-skip: #6c757d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.7; font-size: 15px;
+  }
+  .header {
+    background: linear-gradient(135deg, var(--primary), #6c2bd9);
+    color: white; padding: 48px 24px 40px; text-align: center;
+  }
+  .header h1 { font-size: 26px; margin-bottom: 8px; }
+  .header .meta { font-size: 14px; opacity: 0.9; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+  .section { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow); padding: 28px 32px; margin: 24px 0; }
+  .section-title { font-size: 20px; color: var(--primary); border-left: 5px solid var(--accent); padding-left: 14px; margin-bottom: 16px; }
+
+  /* 面试概况统计 */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .stat-card { background: var(--tag-bg); border-radius: 8px; padding: 16px; text-align: center; }
+  .stat-card .num { font-size: 28px; font-weight: 700; color: var(--primary); }
+  .stat-card .label { font-size: 13px; color: var(--text-muted); }
+
+  /* 面试问答卡片 */
+  .iv-card { border: 1px solid var(--border); border-radius: 10px; margin: 16px 0; overflow: hidden; }
+  .iv-header { display: flex; align-items: flex-start; gap: 12px; padding: 16px 20px; cursor: pointer; }
+  .iv-number { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; background: var(--tag-bg); color: var(--primary); border-radius: 8px; font-weight: 700; font-size: 13px; }
+  .iv-title { flex: 1; font-weight: 600; font-size: 15px; }
+  .iv-quality { font-size: 11px; padding: 2px 10px; border-radius: 12px; font-weight: 700; }
+  .iv-quality.good { background: #d4edda; color: #155724; }
+  .iv-quality.ok { background: #fff3cd; color: #856404; }
+  .iv-quality.bad { background: #f8d7da; color: #721c24; }
+  .iv-quality.skip { background: #e2e3e5; color: #6c757d; }
+  .iv-toggle { color: var(--text-muted); font-size: 18px; transition: transform 0.3s; }
+  .iv-card.open .iv-toggle { transform: rotate(90deg); }
+  .iv-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+  .iv-card.open .iv-body { max-height: 10000px; }
+  .iv-content { padding: 0 20px 20px; border-top: 1px solid var(--border); padding-top: 16px; }
+  .iv-section { margin: 10px 0; }
+  .iv-section h4 { color: var(--primary); font-size: 14px; margin-bottom: 4px; }
+  .iv-answer { background: #f8f9fa; padding: 10px 14px; border-radius: 6px; border-left: 3px solid var(--text-muted); }
+  .iv-standard { background: #e8f5e9; padding: 10px 14px; border-radius: 6px; border-left: 3px solid var(--quality-good); }
+  .iv-improve { background: #fff3e0; padding: 10px 14px; border-radius: 6px; border-left: 3px solid var(--quality-ok); }
+  .iv-extend { background: #e3f2fd; padding: 10px 14px; border-radius: 6px; border-left: 3px solid var(--primary); margin-top: 8px; }
+  .iv-extend-item { margin: 6px 0; padding: 8px 12px; background: white; border-radius: 6px; }
+
+  /* 薄弱点总结 */
+  .weakness-list { list-style: none; }
+  .weakness-list li { padding: 8px 12px; margin: 4px 0; background: #fff5f5; border-left: 3px solid var(--quality-bad); border-radius: 6px; }
+  .action-plan { background: #e8f5e9; border-radius: 8px; padding: 16px; }
+  .action-plan ol { margin: 0 0 0 20px; }
+  .action-plan li { margin: 6px 0; }
+
+  @media print { .iv-body { max-height: none !important; } .iv-toggle { display: none; } * { -webkit-print-color-adjust: exact !important; } }
+</style>
+</head>
+<body>
+
+<!-- 页头 -->
+<div class="header">
+  <h1>{{公司名}} {{岗位名}} 面试记录</h1>
+  <div class="meta">
+    <span>日期：{{日期}}</span>
+    <span>轮次：{{轮次}}</span>
+    <span>时长：{{时长}}</span>
+    <span>形式：{{线上/线下}}</span>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- 面试概况 -->
+<div class="section">
+  <div class="section-title">面试概况</div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="num">{{总题数}}</div><div class="label">问题总数</div></div>
+    <div class="stat-card"><div class="num" style="color: var(--quality-good)">{{优秀数}}</div><div class="label">回答优秀</div></div>
+    <div class="stat-card"><div class="num" style="color: var(--quality-ok)">{{一般数}}</div><div class="label">回答一般</div></div>
+    <div class="stat-card"><div class="num" style="color: var(--quality-bad)">{{不足数}}</div><div class="label">回答不足</div></div>
+    <div class="stat-card"><div class="num" style="color: var(--quality-skip)">{{未答数}}</div><div class="label">未回答</div></div>
+  </div>
+</div>
+
+<!-- 面试问答记录 -->
+<div class="section">
+  <div class="section-title">面试问答记录</div>
+
+  <!-- 每个 Q&A 卡片 -->
+  <div class="iv-card">
+    <div class="iv-header" onclick="this.parentElement.classList.toggle('open')">
+      <span class="iv-number">Q{{题号}}</span>
+      <span class="iv-title">{{面试官问题}}</span>
+      <span class="iv-quality {{质量等级}}">{{质量标签}}</span>
+      <span class="iv-toggle">▶</span>
+    </div>
+    <div class="iv-body"><div class="iv-content">
+      <!-- 候选人实际回答 -->
+      <div class="iv-section">
+        <h4>📝 我的回答</h4>
+        <div class="iv-answer">{{候选人实际回答}}</div>
+      </div>
+      <!-- 标准答案 -->
+      <div class="iv-section">
+        <h4>✅ 标准答案</h4>
+        <div class="iv-standard">{{标准答案}}</div>
+        <div class="key-points"><strong>关键得分点：</strong>① ... ② ... ③ ...</div>
+      </div>
+      <!-- 改进建议 -->
+      <div class="iv-section">
+        <h4>💡 改进建议</h4>
+        <div class="iv-improve">{{如果重来怎么回答更好}}</div>
+      </div>
+      <!-- 延伸追问 -->
+      <div class="iv-section">
+        <h4>🔄 延伸 Q&A（面试官可能继续深挖）</h4>
+        <div class="iv-extend">
+          <div class="iv-extend-item">
+            <strong>追问1：</strong>{{延伸问题1}}<br>
+            <strong>答案：</strong>{{延伸答案1}}
+          </div>
+          <div class="iv-extend-item">
+            <strong>追问2：</strong>{{延伸问题2}}<br>
+            <strong>答案：</strong>{{延伸答案2}}
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<!-- 薄弱点总结 -->
+<div class="section">
+  <div class="section-title">薄弱点总结</div>
+  <ul class="weakness-list">
+    <li>{{薄弱点1}}</li>
+    <li>{{薄弱点2}}</li>
+  </ul>
+</div>
+
+<!-- 复习行动计划 -->
+<div class="section">
+  <div class="section-title">复习行动计划</div>
+  <div class="action-plan">
+    <ol>
+      <li>{{行动项1}}</li>
+      <li>{{行动项2}}</li>
+    </ol>
+  </div>
+</div>
+
+</div>
+
+</body>
+</html>
