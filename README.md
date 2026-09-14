@@ -2,7 +2,7 @@
 
 # 🎯 Interview Prep Generator
 
-### 基于 JD + 简历的全自动笔面试复习资料 & 面试记录整理工具
+### 基于 JD + 简历的全自动笔面试复习资料 & 面试记录整理 & 面试概率评估工具
 
 [![Platform](https://img.shields.io/badge/Platform-Agent%20Universal-blue?style=for-the-badge)]()
 [![Language](https://img.shields.io/badge/Language-ZH%20%2F%20EN-brightgreen?style=for-the-badge)]()
@@ -14,9 +14,12 @@
 <p>
   <strong>输入面试录音/笔记，输出结构化面试记录 + 扩展 Q&A + 复习计划</strong>
 </p>
+<p>
+  <strong>输入面试记录 + JD，输出 8 维评分 + 贝叶斯通过概率估算</strong>
+</p>
 
 <p>
-  🔍 全网搜索面经 &nbsp;·&nbsp; 📝 智能题目生成 &nbsp;·&nbsp; ✅ 答案可核实 &nbsp;·&nbsp; 🎨 精美 HTML 输出 &nbsp;·&nbsp; 🎙️ 面试复盘
+  🔍 全网搜索面经 &nbsp;·&nbsp; 📝 智能题目生成 &nbsp;·&nbsp; ✅ 答案可核实 &nbsp;·&nbsp; 🎨 精美 HTML 输出 &nbsp;·&nbsp; 🎙️ 面试复盘 &nbsp;·&nbsp; 📊 概率评估
 </p>
 
 ---
@@ -32,6 +35,7 @@
 - [输出示例](#-输出示例)
 - [技术架构](#-技术架构)
 - [配套工具](#-配套工具)
+- [面试概率评估工具链](#-面试概率评估工具链)
 - [语音转写工具链](#-语音转写工具链)
 - [FAQ](#-faq)
 - [贡献指南](#-贡献指南)
@@ -42,10 +46,11 @@
 
 ## 🚀 简介
 
-**Interview Prep Generator** 是一个 Agent Skill，适用于任何支持 Web 搜索、文件读写和代码执行的 AI Agent 平台（如 TRAE、Claude Code、Cursor 等）。专为求职者设计，提供两大核心功能：
+**Interview Prep Generator** 是一个 Agent Skill，适用于任何支持 Web 搜索、文件读写和代码执行的 AI Agent 平台（如 TRAE、Claude Code、Cursor 等）。专为求职者设计，提供三大核心功能：
 
 1. **复习资料生成**：根据职位描述（JD）和个人简历，自动生成定制化的笔试和面试复习资料
 2. **面试记录整理**：通过面试录音/备忘录，整理结构化面试记录，补充标准答案，扩展相关 Q&A，生成个性化复习计划
+3. **面试概率评估**：基于 8 维加权评分 + 贝叶斯概率模型，客观估算被录用/进入下一轮的概率。Agent 只做数据采集和填表，概率计算完全由脚本完成
 
 ### 解决什么问题？
 
@@ -122,6 +127,37 @@
 - 薄弱点总结：哪些知识点需要重点复习
 - 复习行动计划：基于面试表现生成
 
+### 功能三：面试通过概率评估
+
+#### 1. 📊 8 维加权评分
+Agent 逐题分析面试问答，在 8 个维度上填写分数和证据：
+
+| 维度 | 权重 | 说明 |
+|------|------|------|
+| 技术准确率 | 20% | 技术知识题回答的正确程度 |
+| 知识深度 | 15% | 追问链能回答到第几层 |
+| 系统设计 | 15% | 设计题覆盖环节完整性 |
+| 代码能力 | 15% | 编程题完成度 |
+| 项目真实度 | 10% | 项目深挖回答的细节程度 |
+| 沟通表达 | 10% | STAR 框架、简洁度、结构化 |
+| 文化匹配 | 10% | 价值观关键词命中率 |
+| 音频信号 | 5% | 迟疑词频率、语速变化、停顿占比 |
+
+#### 2. 🎯 贝叶斯概率模型
+基于公开面经数据校准的统计模型，不使用 AI 主观判断：
+
+- **先验概率**：根据公司级别（BAT 15% / 大厂 20% / 中厂 30%）和轮次调整
+- **似然函数**：通过者得分 N(78,8) vs 未通过者 N(55,12)
+- **后验概率**：贝叶斯公式计算，输出概率区间而非单点值
+
+#### 3. 📈 评估报告
+生成包含以下内容的 HTML 报告：
+- 分数卡（总分 + 概率区间 + 置信度）
+- 8 维雷达图（纯 SVG）
+- 各维度详情 + evidence + 改进建议
+- 优势/风险点分析
+- 与公开面经中通过/未通过者的对比
+
 ---
 
 ## 🏁 快速开始
@@ -130,6 +166,8 @@
 
 - 任何支持 Web 搜索 + 文件读写 + 代码执行的 AI Agent 平台
 - Google Chrome（用于 HTML 转 PDF，可选）
+- Python 3.8+（用于评估工具脚本，可选）
+- OpenAI Whisper（用于面试音频转写，可选）：`pip install openai-whisper`
 
 ### 安装
 
@@ -144,7 +182,11 @@ your-project/
 │       ├── README.md
 │       ├── template.html
 │       ├── tools/
-│       │   └── html2pdf.py
+│       │   ├── html2pdf.py
+│       │   ├── score_calculator.py
+│       │   ├── transcript_analyzer.py
+│       │   ├── probability_model.py
+│       │   └── scoring_template.json
 │       └── LICENSE
 ```
 
@@ -232,6 +274,44 @@ JD:
 │   └── ...
 ├── 薄弱点总结
 └── 复习行动计划
+```
+
+### 使用 — 面试概率评估
+
+在 Agent 对话中直接输入：
+
+```
+请评估我这次面试的通过概率：
+
+公司：XXX
+岗位：后端开发工程师
+轮次：二面
+
+面试录音/笔记：/path/to/interview.txt
+JD：负责应用系统的设计、开发与维护...
+简历文件：/path/to/resume.html
+```
+
+或者更简单地说：
+
+```
+帮我评估一下这次面试表现，录音在 interview.mp3
+```
+
+### 示例输出 — 评估报告
+
+```
+📊 XXX后端面试评估2026-09-14.html
+├── 分数卡（总分 72.5/100 + 概率 55-75%）
+├── 8 维雷达图（SVG）
+├── 各维度详情
+│   ├── 技术准确率: 80/100 (evidence: 正确回答 HashMap 原理...)
+│   ├── 知识深度: 60/100 (evidence: 追问到第2层后卡住...)
+│   ├── ...
+├── 优势: 技术准确率(80) | 代码能力(75) | 项目真实度(70)
+├── 风险: 知识深度(60) | 系统设计(55) | 文化匹配(50)
+├── 基准对比: 你的得分 vs 通过者均值(78) vs 未通过者均值(55)
+└── 改进建议: 重点加强系统设计中的容灾和扩展性环节...
 ```
 
 ---
@@ -371,12 +451,16 @@ JD:
 
 ```
 interview-prep/
-├── SKILL.md          # Skill 定义文件（核心逻辑，含两大工作流）
-├── README.md         # 本文件
-├── template.html     # HTML 输出模板参考（复习资料 + 面试记录两种模式）
-├── tools/            # 配套工具目录（后续持续维护新增）
-│   └── html2pdf.py   # HTML 转 PDF 工具
-└── LICENSE           # MIT 许可证
+├── SKILL.md                # Skill 定义文件（核心逻辑，含三大工作流）
+├── README.md               # 本文件
+├── template.html           # HTML 输出模板（复习资料 + 面试记录 + 评估报告三种模式）
+├── tools/                  # 配套工具目录（后续持续维护新增）
+│   ├── html2pdf.py         # HTML 转 PDF 工具
+│   ├── score_calculator.py # 加权评分计算器（8 维）
+│   ├── transcript_analyzer.py # 转写文本分析器（音频信号）
+│   ├── probability_model.py   # 贝叶斯概率估算模型
+│   └── scoring_template.json  # 评分数据模板
+└── LICENSE                 # MIT 许可证
 ```
 
 ---
@@ -418,6 +502,101 @@ python3 tools/html2pdf.py a.html b.html c.html
 
 - macOS / Linux / Windows
 - Google Chrome 或 Chromium 内核浏览器（Edge、Brave 等）
+
+---
+
+## 📊 面试概率评估工具链
+
+面试概率评估模式（Workflow C）使用三个独立脚本完成客观计算，Agent 只负责数据采集和填表。
+
+### score_calculator.py — 加权评分计算器
+
+从 JSON 评分数据计算 8 个维度的得分和加权总分。
+
+```bash
+# 基本用法（打印结果）
+python3 tools/score_calculator.py scoring_data.json
+
+# 保存结果到文件
+python3 tools/score_calculator.py scoring_data.json -o score_result.json
+```
+
+输入：`scoring_template.json` 格式的评分数据（Agent 填写）
+输出：各维度得分 + 加权总分 + 最强/最弱维度识别
+
+### transcript_analyzer.py — 转写文本分析器
+
+分析面试转写文本的客观音频/语言信号，自动计算音频信号维度得分。
+
+```bash
+# 纯文本分析
+python3 tools/transcript_analyzer.py transcript.txt
+
+# Whisper JSON 格式（含时间戳）
+python3 tools/transcript_analyzer.py transcript.json --format whisper
+
+# 保存结果
+python3 tools/transcript_analyzer.py transcript.txt -o audio_signals.json
+```
+
+分析项：迟疑词频率、语速变化、停顿占比、技术术语密度
+
+### probability_model.py — 贝叶斯概率估算模型
+
+基于公开面经数据校准的统计模型，估算通过概率。
+
+```bash
+# 直接指定分数
+python3 tools/probability_model.py --score 72.5 --company "百度" --round "二面"
+
+# 从 score_calculator 的输出读取
+python3 tools/probability_model.py --score-result score_result.json --company "百度" --round "二面"
+
+# 手动指定先验通过率
+python3 tools/probability_model.py --score 68 --prior 0.25 --round-multiplier 0.8
+```
+
+输出：通过概率区间 + 置信度 + 得分分布对比 + 解读建议
+
+### scoring_template.json — 评分数据模板
+
+预置的 8 维评分模板，Agent 填入数据，脚本计算。包含所有维度的数据结构定义。
+
+### 评估流程
+
+```
+面试录音/笔记 + JD + 简历
+        │
+        ▼
+  Phase C1: 数据收集（转写 + JD解析 + 面经搜索）
+        │
+        ▼
+  Phase C2: Agent 逐题评分填表（8 维，每项附 evidence）
+        │
+        ▼
+  transcript_analyzer.py ──→ 音频信号维度（自动）
+        │
+        ▼
+  score_calculator.py ──→ 加权总分 + 各维度得分
+        │
+        ▼
+  probability_model.py ──→ 概率区间 + 置信度
+        │
+        ▼
+  Phase C4: 基准对比（搜索公开面经）
+        │
+        ▼
+  Phase C5: 评估报告 HTML（分数卡 + 雷达图 + 改进建议）
+```
+
+### 关键设计原则
+
+1. **Agent 只做数据采集和填表，不做概率判断** — 概率计算完全由脚本完成
+2. **概率给区间不给单点值** — 如 "55-75%"，并标注置信度
+3. **每项评分必须有 evidence** — 不能只给 8/10，必须说明为什么
+4. **先验概率来自公开数据** — 不凭空假设
+5. **音频信号是加分项不是决定项** — 5% 权重，避免过度解读
+6. **模型参数可追溯** — README 和 SKILL.md 中标注所有参数来源
 
 ---
 

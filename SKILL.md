@@ -1,18 +1,20 @@
 ---
 name: "interview-prep"
-description: "Generates comprehensive written exam and interview preparation materials from a JD and resume. Also supports converting interview audio/notes into structured records with expanded Q&A. Invoke when user asks for 面试复习资料, 笔试面试准备, interview prep, 面试记录整理, or provides a JD + resume for study material generation."
+description: "Generates comprehensive written exam and interview preparation materials from a JD and resume. Also supports converting interview audio/notes into structured records with expanded Q&A, and estimating interview pass probability using a Bayesian model with 8-dimension weighted scoring. Invoke when user asks for 面试复习资料, 笔试面试准备, interview prep, 面试记录整理, 面试概率评估, or provides a JD + resume for study material generation."
 ---
 
 # Interview Prep Generator
 
-> 根据 JD（职位描述）+ 个人简历，全自动生成带标准答案的笔试、面试复习资料；同时支持通过面试录音/备忘录整理结构化面试记录并扩展 Q&A。
+> 根据 JD（职位描述）+ 个人简历，全自动生成带标准答案的笔试、面试复习资料；同时支持通过面试录音/备忘录整理结构化面试记录并扩展 Q&A；还支持基于 8 维评分 + 贝叶斯模型客观评估面试通过概率。
 
 ## When to Invoke
 
-- 用户提供 JD + 简历，要求制作复习资料 → 进入 **复习资料生成模式**
-- 用户提供面试录音/笔记/备忘录，要求整理面试记录 → 进入 **面试记录整理模式**
+- 用户提供 JD + 简历，要求制作复习资料 → 进入 **复习资料生成模式 (Workflow A)**
+- 用户提供面试录音/笔记/备忘录，要求整理面试记录 → 进入 **面试记录整理模式 (Workflow B)**
+- 用户要求评估面试通过概率/面试打分 → 进入 **面试概率评估模式 (Workflow C)**
 - 用户说"根据JD做面试准备"、"生成笔试题"、"面试复习资料"
 - 用户说"整理面试记录"、"面试复盘"、"面经整理"
+- 用户说"评估面试通过率"、"面试概率评估"、"面试打分"
 - 用户说 `/interview-prep` 或 `面试复习`
 
 ## Input Requirements
@@ -251,13 +253,129 @@ description: "Generates comprehensive written exam and interview preparation mat
 
 ---
 
+## Workflow C: 面试通过概率评估
+
+> 基于 8 维加权评分 + 贝叶斯概率模型 + 公开面经数据，客观评估被录用/进入下一轮的概率。
+> **核心原则：Agent 只做数据采集和填表，概率计算完全由脚本完成。**
+
+### 触发方式
+
+- 用户说"评估面试通过率"、"面试概率评估"、"面试打分"
+- 用户说"帮我评估一下这次面试表现"
+- 用户说 `/interview-prep 评估` 或 `面试概率评估`
+
+### Phase C1: 数据收集
+
+1. **面试录音/记录**：
+   - 如有音频 → 使用 Whisper 转写（同 Workflow B Phase B1）
+   - 如有文本笔记 → 直接使用
+   - 如有已有的面试记录 HTML → 提取 Q&A 对
+
+2. **JD 解析**：提取考察维度和技术栈关键词
+
+3. **简历解析**：用于项目深挖问题的对照基准
+
+4. **公开面经搜索**（WebSearch）：
+   - 搜索该公司/岗位的"已 offer"/"挂了"面经
+   - 提取通过者和未通过者的回答特征
+   - 确定先验通过率（从 `probability_model.py` 的 `COMPANY_MAP` 获取基础值）
+
+### Phase C2: 结构化评分
+
+Agent 逐题分析面试问答，填写评分数据到 `scoring_template.json` 格式：
+
+**8 个评分维度及 Agent 职责**：
+
+| 维度 | 权重 | Agent 填写内容 | 脚本计算 |
+|------|------|---------------|----------|
+| 技术准确率 | 20% | 每题 score/max_score + rating + evidence | 加权平均 |
+| 知识深度 | 15% | 追问总层数 + 实际回答层数 | 比率计算 |
+| 系统设计 | 15% | 8 项 checklist 勾选 | 覆盖率计算 |
+| 代码能力 | 15% | 4 项 boolean（思路/代码/边界/复杂度） | 通过率计算 |
+| 项目真实度 | 10% | 4 项 boolean（技术细节/角色/挑战/量化） | 通过率计算 |
+| 沟通表达 | 10% | 3 项 boolean（STAR/简洁/结构化） | 通过率计算 |
+| 文化匹配 | 10% | 命中关键词/总关键词 | 比率计算 |
+| 音频信号 | 5% | 运行 `transcript_analyzer.py` 自动生成 | 脚本自动 |
+
+**评分要求**：
+- 每项评分必须附带 `evidence`（具体证据，不能只给分数）
+- rating 必须从 `excellent/good/fair/poor/unanswered` 中选择
+- 音频信号维度由 `transcript_analyzer.py` 自动计算，Agent 不参与
+
+### Phase C3: 脚本计算
+
+**步骤 1**：运行音频信号分析
+```bash
+python3 tools/transcript_analyzer.py transcript.txt --output audio_signals.json
+```
+将输出填入 scoring_data 的 `audio_signals` 维度。
+
+**步骤 2**：运行加权评分计算
+```bash
+python3 tools/score_calculator.py scoring_data.json --output score_result.json
+```
+输出各维度得分 + 加权总分。
+
+**步骤 3**：运行概率估算
+```bash
+python3 tools/probability_model.py --score-result score_result.json --company "公司名" --round "轮次" --output probability_result.json
+```
+输出通过概率区间 + 置信度。
+
+### Phase C4: 基准对比
+
+Agent 使用 WebSearch 搜索该公司/岗位的面经，对比：
+- 已 offer 者的回答特征（哪些维度得分高）
+- 挂了者的回答特征（哪些维度得分低）
+- 用户的相对位置
+
+### Phase C5: 生成评估报告 HTML
+
+使用模板（参考 `template.html` 中的评估报告模板）生成自包含 HTML 文件，包含：
+
+- **分数卡**：总分 + 各维度得分 + 概率区间
+- **雷达图**：8 维 SVG 雷达图（纯 SVG，无外部依赖）
+- **各维度详情**：得分 + evidence + 改进建议
+- **优势/风险点**：最强的 3 个维度 + 最弱的 3 个维度
+- **基准对比**：与公开面经中通过/未通过者的对比
+- **改进建议**：针对薄弱维度的具体复习方向
+- **模型说明**：概率计算方法 + 参数来源 + 免责声明
+
+### Phase C6: 输出与交付
+
+1. HTML 文件保存路径：`{工作目录}/面经/{公司名}{岗位}面试评估{日期}.html`
+2. 向用户展示文件链接
+3. 简要说明总分、概率区间、最薄弱维度
+4. 提示概率仅供参考，实际结果受多种因素影响
+
+### 评估模型参数说明
+
+| 参数 | 值 | 来源 |
+|------|-----|------|
+| 通过者得分均值 | 78 | 公开面经统计 |
+| 通过者得分标准差 | 8 | 公开面经统计 |
+| 未通过者得分均值 | 55 | 公开面经统计 |
+| 未通过者得分标准差 | 12 | 公开面经统计 |
+| BAT 校招通过率 | 15% | 公开报道 |
+| 大厂校招通过率 | 20% | 公开报道 |
+| 中厂校招通过率 | 30% | 面经统计 |
+| 各轮次通过率 | 30-80% | 牛客网面经统计 |
+
+> 以上参数为粗略估计，可能存在偏差。模型输出概率区间而非单点值，以反映不确定性。
+
+---
+
 ## Output Format
 
-### 复习资料模式
+### 复习资料模式 (Workflow A)
 输出单个 HTML 文件，文件名：`{公司名}{岗位简称}笔试面试复习资料.html`
 
-### 面试记录模式
+### 面试记录模式 (Workflow B)
 输出单个 HTML 文件，文件名：`{公司名}{岗位简称}面试记录{日期}.html`
+
+### 面试概率评估模式 (Workflow C)
+输出单个 HTML 文件，文件名：`{公司名}{岗位简称}面试评估{日期}.html`
+同时输出中间数据文件（可选）：`scoring_data.json`、`score_result.json`、`probability_result.json`
 
 ## Important Notes
 

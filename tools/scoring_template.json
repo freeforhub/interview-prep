@@ -1,0 +1,168 @@
+{
+  "company": "",
+  "position": "",
+  "round": "",
+  "interview_date": "",
+  "prior_pass_rate": 0.25,
+  "round_multiplier": 1.0,
+  "dimensions": {
+    "technical_accuracy": {
+      "label": "技术准确率",
+      "weight": 0.20,
+      "description": "技术知识题回答的正确程度",
+      "items": [
+        {
+          "question_id": "",
+          "question_summary": "",
+          "max_score": 10,
+          "score": 0,
+          "rating": "excellent|good|fair|poor|unanswered",
+          "evidence": ""
+        }
+      ]
+    },
+    "knowledge_depth": {
+      "label": "知识深度",
+      "weight": 0.15,
+      "description": "追问链能回答到第几层",
+      "items": [
+        {
+          "question_id": "",
+          "question_summary": "",
+          "followup_layers": 0,
+          "layers_answered": 0,
+          "depth_ratio": 0.0,
+          "evidence": ""
+        }
+      ]
+    },
+    "system_design": {
+      "label": "系统设计",
+      "weight": 0.15,
+      "description": "设计题覆盖环节完整性",
+      "items": [
+        {
+          "question_id": "",
+          "question_summary": "",
+          "checklist": {
+            "requirements_clarification": false,
+            "architecture": false,
+            "data_model": false,
+            "api_design": false,
+            "scalability": false,
+            "fault_tolerance": false,
+            "monitoring": false,
+            "tradeoffs": false
+          },
+          "coverage_ratio": 0.0,
+          "evidence": ""
+        }
+      ]
+    },
+    "coding": {
+      "label": "代码能力",
+      "weight": 0.15,
+      "description": "编程题完成度",
+      "items": [
+        {
+          "question_id": "",
+          "question_summary": "",
+          "approach_correct": false,
+          "code_complete": false,
+          "handles_edge_cases": false,
+          "complexity_analyzed": false,
+          "score": 0,
+          "max_score": 10,
+          "evidence": ""
+        }
+      ]
+    },
+    "project_authenticity": {
+      "label": "项目真实度",
+      "weight": 0.10,
+      "description": "项目深挖回答的细节程度",
+      "items": [
+        {
+          "question_id": "",
+          "project_name": "",
+          "technical_details": false,
+          "role_clarity": false,
+          "challenges_described": false,
+          "metrics_provided": false,
+          "score": 0,
+          "max_score": 10,
+          "evidence": ""
+        }
+      ]
+    },
+    "communication": {
+      "label": "沟通表达",
+      "weight": 0.10,
+      "description": "回答结构性和简洁度",
+      "items": [
+        {
+          "question_id": "",
+          "question_summary": "",
+          "uses_star_framework": false,
+          "concise": false,
+          "structured": false,
+          "score": 0,
+          "max_score": 10,
+          "evidence": ""
+        }
+      ]
+    },
+    "culture_fit": {
+      "label": "文化匹配",
+      "weight": 0.10,
+      "description": "行为面试与公司价值观对齐度",
+      "items": [
+        {
+          "question_id": "",
+          "question_summary": "",
+          "value_keywords_hit": [],
+          "value_keywords_total": [],
+          "score": 0,
+          "max_score": 10,
+          "evidence": ""
+        }
+      ]
+    },
+    "audio_signals": {
+      "label": "音频信号",
+      "weight": 0.05,
+      "description": "迟疑词频率、语速、停顿等客观音频指标",
+      "items": [
+        {
+          "metric": "hesitation_frequency",
+          "value": 0.0,
+          "benchmark": 0.0,
+          "score": 0,
+          "max_score": 10
+        },
+        {
+          "metric": "speech_rate_variance",
+          "value": 0.0,
+          "benchmark": 0.0,
+          "score": 0,
+          "max_score": 10
+        },
+        {
+          "metric": "silence_ratio",
+          "value": 0.0,
+          "benchmark": 0.0,
+          "score": 0,
+          "max_score": 10
+        },
+        {
+          "metric": "tech_term_density",
+          "value": 0.0,
+          "benchmark": 0.0,
+          "score": 0,
+          "max_score": 10
+        }
+      ],
+      "auto_calculated": true
+    }
+  }
+}

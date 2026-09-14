@@ -3,9 +3,10 @@
   供 Agent 生成内容时参考的模板结构
   实际输出时替换 {{占位符}} 为真实内容
 
-  两种模板：
+  三种模板：
   - Template A: 复习资料模式 (Q&A 卡片式)
   - Template B: 面试记录模式 (时间线 + 质量评级)
+  - Template C: 评估报告模式 (分数卡 + 雷达图 + 概率区间)
 -->
 
 <!-- ====================================================== -->
@@ -286,6 +287,201 @@
   </div>
 </div>
 
+</div>
+
+</body>
+</html>
+
+<!-- ====================================================== -->
+<!-- Template C: 评估报告模式                                -->
+<!-- ====================================================== -->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{公司名}} {{岗位名}} — 面试评估报告 {{日期}}</title>
+<style>
+  :root {
+    --primary: #0064FF;
+    --accent: #FF3355;
+    --success: #28a745;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --bg: #f5f7fa;
+    --card-bg: #ffffff;
+    --text: #1a1a2e;
+    --text-muted: #6c757d;
+    --border: #e2e8f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .report-header {
+    background: linear-gradient(135deg, var(--primary), #00a0ff);
+    color: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .report-header h1 { font-size: 1.5em; margin-bottom: 8px; }
+  .report-header .meta { font-size: 0.9em; opacity: 0.9; }
+  .score-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .score-total { text-align: center; padding: 20px; border-right: 2px solid var(--border); }
+  .score-total .number { font-size: 3em; font-weight: 800; color: var(--primary); }
+  .score-total .label { color: var(--text-muted); font-size: 0.85em; }
+  .score-probability { text-align: center; padding: 20px; }
+  .score-probability .number { font-size: 3em; font-weight: 800; color: var(--success); }
+  .score-probability .range { font-size: 1.1em; color: var(--text-muted); }
+  .confidence { display: inline-block; padding: 2px 12px; border-radius: 12px; font-size: 0.8em; margin-top: 8px; }
+  .confidence-high { background: #d4edda; color: #155724; }
+  .confidence-medium { background: #fff3cd; color: #856404; }
+  .confidence-low { background: #f8d7da; color: #721c24; }
+  .radar-section { background: var(--card-bg); border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 24px; text-align: center; }
+  .radar-section h2 { margin-bottom: 16px; font-size: 1.1em; }
+  .dimension-list { background: var(--card-bg); border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 24px; }
+  .dimension-list h2 { margin-bottom: 16px; font-size: 1.1em; }
+  .dimension-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .dimension-item:last-child { border-bottom: none; }
+  .dimension-label { flex: 0 0 120px; font-weight: 600; }
+  .dimension-bar-container { flex: 1; height: 24px; background: var(--bg); border-radius: 12px; overflow: hidden; margin: 0 12px; }
+  .dimension-bar { height: 100%; border-radius: 12px; }
+  .bar-success { background: linear-gradient(90deg, #28a745, #20c997); }
+  .bar-warning { background: linear-gradient(90deg, #ffc107, #ff9800); }
+  .bar-danger { background: linear-gradient(90deg, #dc3545, #ff3355); }
+  .dimension-score { flex: 0 0 60px; text-align: right; font-weight: 700; }
+  .strength-weakness { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .strength-box, .weakness-box { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .strength-box h3 { color: var(--success); margin-bottom: 12px; }
+  .weakness-box h3 { color: var(--danger); margin-bottom: 12px; }
+  .evidence-section { background: var(--card-bg); border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 24px; }
+  .evidence-section h2 { margin-bottom: 16px; font-size: 1.1em; }
+  .evidence-item { border-left: 3px solid var(--primary); padding: 12px 16px; margin-bottom: 12px; background: #f8f9fa; border-radius: 0 8px 8px 0; }
+  .evidence-item .dim-name { font-weight: 700; color: var(--primary); }
+  .evidence-item .score { color: var(--text-muted); margin-left: 8px; }
+  .evidence-item .detail { margin-top: 6px; font-size: 0.9em; color: var(--text-muted); }
+  .comparison-section { background: var(--card-bg); border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 24px; }
+  .comparison-section h2 { margin-bottom: 16px; font-size: 1.1em; }
+  .comparison-bar { display: flex; align-items: center; padding: 8px 0; gap: 12px; }
+  .comparison-label { flex: 0 0 120px; font-size: 0.9em; }
+  .comparison-bar-container { flex: 1; height: 20px; background: var(--bg); border-radius: 10px; overflow: hidden; }
+  .comparison-fill { height: 100%; border-radius: 10px; }
+  .comparison-score { flex: 0 0 50px; text-align: right; font-weight: 700; }
+  .disclaimer { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 16px; margin-bottom: 24px; font-size: 0.85em; color: #856404; }
+  @media print { body { background: #fff; padding: 0; max-width: none; } .score-card { box-shadow: none; border: 1px solid #ddd; } }
+</style>
+</head>
+<body>
+
+<div class="report-header">
+  <h1>{{公司名}} {{岗位名}} 面试评估报告</h1>
+  <div class="meta">{{日期}} | {{轮次}} | {{面试时长}}</div>
+</div>
+
+<div class="score-card">
+  <div class="score-total">
+    <div class="number">{{总分}}</div>
+    <div class="label">/ 100 分</div>
+  </div>
+  <div class="score-probability">
+    <div class="number">{{通过概率}}%</div>
+    <div class="range">区间: {{概率下限}}% - {{概率上限}}%</div>
+    <span class="confidence confidence-{{置信度class}}">置信度: {{置信度}}</span>
+  </div>
+</div>
+
+<div class="radar-section">
+  <h2>8 维能力雷达图</h2>
+  <!-- Agent 在此处生成 SVG 雷达图，8 个轴对应8个维度，值为0-100 -->
+  <!-- 占位: {{SVG_RADAR}} -->
+</div>
+
+<div class="dimension-list">
+  <h2>各维度得分</h2>
+  <!-- 重复以下8个维度项 -->
+  <div class="dimension-item">
+    <span class="dimension-label">{{维度名}}</span>
+    <div class="dimension-bar-container">
+      <div class="dimension-bar bar-{{颜色class}}" style="width: {{得分}}%;"></div>
+    </div>
+    <span class="dimension-score">{{得分}}</span>
+  </div>
+  <!-- /重复 -->
+</div>
+
+<div class="strength-weakness">
+  <div class="strength-box">
+    <h3>优势维度</h3>
+    <ul>
+      <li>{{优势维度1}}: {{优势得分1}}/100</li>
+    </ul>
+  </div>
+  <div class="weakness-box">
+    <h3>薄弱维度</h3>
+    <ul>
+      <li>{{薄弱维度1}}: {{薄弱得分1}}/100</li>
+    </ul>
+  </div>
+</div>
+
+<div class="evidence-section">
+  <h2>评分详情</h2>
+  <div class="evidence-item">
+    <span class="dim-name">{{维度名}}</span>
+    <span class="score">{{得分}}/100</span>
+    <div class="detail">证据: {{evidence}}</div>
+    <div class="detail">改进建议: {{改进建议}}</div>
+  </div>
+</div>
+
+<div class="comparison-section">
+  <h2>基准对比</h2>
+  <div class="comparison-bar">
+    <span class="comparison-label">未通过者均值</span>
+    <div class="comparison-bar-container">
+      <div class="comparison-fill" style="width: 55%; background: var(--danger);"></div>
+    </div>
+    <span class="comparison-score">55</span>
+  </div>
+  <div class="comparison-bar">
+    <span class="comparison-label">你的得分</span>
+    <div class="comparison-bar-container">
+      <div class="comparison-fill" style="width: {{得分百分比}}%; background: var(--primary);"></div>
+    </div>
+    <span class="comparison-score">{{总分}}</span>
+  </div>
+  <div class="comparison-bar">
+    <span class="comparison-label">通过者均值</span>
+    <div class="comparison-bar-container">
+      <div class="comparison-fill" style="width: 78%; background: var(--success);"></div>
+    </div>
+    <span class="comparison-score">78</span>
+  </div>
+</div>
+
+<div class="disclaimer">
+  <strong>免责声明：</strong>
+  本评估基于公开面经数据校准的统计模型（贝叶斯估计），概率参数为粗略估计，可能存在偏差。
+  实际通过率受面试官主观判断、岗位竞争度、HC 数量、面试难度等多种因素影响。
+  评估结果仅供个人参考和改进方向参考，不代表实际面试结果。
 </div>
 
 </body>
