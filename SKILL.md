@@ -301,6 +301,7 @@ Agent 逐题分析面试问答，填写评分数据到 `scoring_template.json` �
 - 每项评分必须附带 `evidence`（具体证据，不能只给分数）
 - rating 必须从 `excellent/good/fair/poor/unanswered` 中选择
 - 音频信号维度由 `transcript_analyzer.py` 自动计算，Agent 不参与
+- **缺失维度处理**：当面试官未考察某个维度（如没有系统设计题、没有行为面试），该维度 `items` 留空，`score_calculator.py` 会自动取其他已评分维度的均值填充，而不是直接记 0 分。缺失维度不参与优势/薄弱维度排名
 
 ### Phase C3: 脚本计算
 

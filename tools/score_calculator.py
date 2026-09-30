@@ -19,7 +19,7 @@ def calculate_dimension_score(dim_key, dim_data):
     """计算单个维度的得分 (0-100)。"""
     items = dim_data.get("items", [])
     if not items:
-        return 0.0, 0, "无评分数据"
+        return None, 0, "面试官未考察此维度"
 
     total_score = 0.0
     total_max = 0.0
@@ -134,11 +134,10 @@ def calculate_dimension_score(dim_key, dim_data):
 
 
 def calculate_overall(scoring_data):
-    """计算各维度得分和加权总分。"""
+    """计算各维度得分和加权总分。缺失维度取其他维度均值。"""
     dimensions = scoring_data.get("dimensions", {})
     results = {}
-    weighted_total = 0.0
-    total_weight = 0.0
+    scored_dims = []
 
     for dim_key, dim_data in dimensions.items():
         weight = dim_data.get("weight", 0)
@@ -147,21 +146,43 @@ def calculate_overall(scoring_data):
         results[dim_key] = {
             "label": label,
             "weight": weight,
-            "score": round(score, 1),
+            "score": round(score, 1) if score is not None else None,
             "item_count": count,
-            "details": details
+            "details": details,
+            "missing": score is None
         }
-        weighted_total += score * weight
-        total_weight += weight
+        if score is not None:
+            scored_dims.append((dim_key, score, weight))
+
+    if scored_dims:
+        avg_score = sum(s for _, s, _ in scored_dims) / len(scored_dims)
+    else:
+        avg_score = 0.0
+
+    for dim_key in results:
+        if results[dim_key]["missing"]:
+            results[dim_key]["score"] = round(avg_score, 1)
+            results[dim_key]["details"] = [f"面试官未考察此维度，取其他维度均值 {avg_score:.1f}"]
+
+    weighted_total = 0.0
+    total_weight = 0.0
+    for dim_key, dim in results.items():
+        weighted_total += dim["score"] * dim["weight"]
+        total_weight += dim["weight"]
 
     overall_score = (weighted_total / total_weight) if total_weight > 0 else 0.0
 
-    sorted_dims = sorted(results.items(), key=lambda x: x[1]["score"])
+    non_missing = {k: v for k, v in results.items() if not v["missing"]}
+    sorted_dims = sorted(non_missing.items(), key=lambda x: x[1]["score"])
     weakest = sorted_dims[:3]
     strongest = sorted_dims[-3:]
 
+    missing_keys = [k for k, v in results.items() if v["missing"]]
+
     return {
         "overall_score": round(overall_score, 1),
+        "avg_fill_score": round(avg_score, 1),
+        "missing_dimensions": missing_keys,
         "dimensions": results,
         "strongest": [{"dim": k, "label": v["label"], "score": v["score"]} for k, v in strongest],
         "weakest": [{"dim": k, "label": v["label"], "score": v["score"]} for k, v in weakest],
@@ -192,11 +213,17 @@ def main():
     print(f"  面试评分报告")
     print(f"  公司: {company} | 岗位: {position} | 轮次: {round_name}")
     print(f"{'='*60}")
-    print(f"\n  总分: {result['overall_score']}/100\n")
-    print(f"  {'维度':<20} {'权重':>6} {'得分':>8} {'题数':>6}")
-    print(f"  {'-'*44}")
+    print(f"\n  总分: {result['overall_score']}/100")
+
+    if result.get("missing_dimensions"):
+        print(f"  缺失维度（取均值 {result['avg_fill_score']}）: {', '.join(result['missing_dimensions'])}")
+
+    print()
+    print(f"  {'维度':<20} {'权重':>6} {'得分':>8} {'题数':>6} {'状态':>8}")
+    print(f"  {'-'*52}")
     for dim_key, dim in result["dimensions"].items():
-        print(f"  {dim['label']:<20} {dim['weight']*100:>5.0f}% {dim['score']:>7.1f} {dim['item_count']:>6}")
+        status = "缺失" if dim["missing"] else "正常"
+        print(f"  {dim['label']:<20} {dim['weight']*100:>5.0f}% {dim['score']:>7.1f} {dim['item_count']:>6} {status:>8}")
 
     print(f"\n  优势维度:")
     for s in result["strongest"]:
